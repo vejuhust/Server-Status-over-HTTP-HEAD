@@ -2,9 +2,10 @@
 """Status reducer for Server Status over HTTP HEAD"""
 
 # Using
-from re import compile, findall
 from collections import OrderedDict
-
+from heapq import merge
+from re import compile, findall
+from xml.etree.ElementTree import Element, SubElement, tostring
 
 # Configuration
 config_tag = "abcwtf"
@@ -26,6 +27,7 @@ config_page_tags = [
     config_page_tag_content
 ]
 
+
 # Load log file by line
 with open(config_log_name, 'r') as log_file:
     log_raw = log_file.readlines()
@@ -44,44 +46,79 @@ def extract_status_entity(log_line):
     # Extract raw status string
     status_pos_start = log_line.find(log_identity)
     if status_pos_start < 0:
-        return
+        return None, None
     status_pos_end = log_line.rfind('"')
     status_string = log_line[status_pos_start + len(log_identity) : status_pos_end]
     # Save source info into entity
-    status_entity = OrderedDict()
+    status_entity = {}
+    section_keys = []
     source_match = source_pattern.search(log_line)
     if source_match:
         status_entity[config_entity_from] = source_match.group(1)
         status_entity[config_entity_date] = source_match.group(2)
     # Convert status string into entity
     for (section_key, section_value) in findall(section_pattern, status_string):
-        status_entity[section_key.strip().lower()] = section_value.strip()
-    return status_entity
+        section_key = section_key.strip().lower()
+        status_entity[section_key] = section_value.strip()
+        section_keys.append(section_key)
+    return status_entity, section_keys
+
+
+# Merge sorted list without duplicate items
+def merge_sorted_and_unique_lists(list1, list2):
+    list_merged = list(merge(list1, list2))
+    items_existed = set()
+    list_result = []
+    for item in list_merged:
+        if item not in items_existed:
+            list_result.append(item)
+            items_existed.add(item)
+    return list_result
 
 
 # Keep only the latest status entity for each server
 status_entities = {}
+section_all_keys = []
 for line in log_lines:
-    status_entity = extract_status_entity(line)
+    status_entity, section_keys = extract_status_entity(line)
     if status_entity and config_entity_key in status_entity:
         entity_key = status_entity[config_entity_key]
         if not entity_key in status_entities:
             status_entities[entity_key] = status_entity
+            section_all_keys = merge_sorted_and_unique_lists(section_all_keys, section_keys)
+
 status_entities = OrderedDict(sorted(status_entities.items(), key = lambda x:x[0].lower(), reverse = False))
 
-
-# for entity_key in status_entities:
-#     print(entity_key, status_entities[entity_key], "\n")
 
 # Load page template
 with open(config_page_template, 'r') as template_file:
     template_lines = template_file.readlines()
 
+
 # Prepare page entity
 page_entity = {}
 page_entity[config_page_tag_title] = "This is Title"
 page_entity[config_page_tag_notice] = "Last updated at: "
-page_entity[config_page_tag_content] = "<b>Hello World!</b>"
+# Convert status entities into HTML table
+table_root = Element("table")
+table_header = SubElement(table_root, "tr")
+# Table header
+SubElement(table_header, "th").text = "time"
+SubElement(table_header, "th").text = "from"
+for section_key in section_all_keys:
+    SubElement(table_header, "th").text = section_key
+section_all_keys = [config_entity_date, config_entity_from] + section_all_keys
+# Table content
+for entity_key in status_entities:
+    status_entity = status_entities[entity_key]
+    table_row = SubElement(table_root, "tr")
+    for section_key in section_all_keys:
+        if section_key in status_entity:
+            SubElement(table_row, "td").text = status_entity[section_key]
+        else:
+            SubElement(table_row, "td").text = "-"
+page_entity[config_page_tag_content] = tostring(table_root, encoding="unicode")
+
 
 # Render page with template & entity
 page_lines = []
