@@ -9,17 +9,18 @@
       font: inherit;
       font-size: 100%;
       font-family: Menlo, monospace, Consolas, Courier;
+      margin: 0 20px;
     }
     h1 {
       font-size: xx-large;
-      font-weight: bold;
+      font-weight: lighter;
       text-align: center;
     }
     .notice {
+      font-size: small;
       font-style: italic;
       margin-top: 30px;
-      margin-bottom: 20px;
-      margin-left: 20px;
+      margin-bottom: 15px;
     }
     .warning {
       font-size: x-large;
@@ -27,6 +28,19 @@
     }
     table {
       font-size: small;
+      border: groove;
+      border-collapse: collapse;
+      white-space: nowrap;
+    }
+    th {
+      border-bottom: 1px solid grey;
+    }
+    td {
+      border: 1px dotted grey;
+      padding: 1px 3px;
+    }
+    td:first-child, td:nth-child(2), td:nth-child(3) {
+      white-space: nowrap;
     }
   </style>
 </head>
