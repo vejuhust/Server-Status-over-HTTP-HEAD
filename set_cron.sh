@@ -1,6 +1,7 @@
 #!/bin/sh
 
 SSOHH_TAG=YOUR_PRIVATE_TAG_FOR_SSOHH
+ENDPOINT=http://service.yewei.me/
 
 if [ $# -ge 1 ];
 then
@@ -28,6 +29,6 @@ mac)
     ;;
 esac
 
-COMMAND='curl http://service.yewei.me/ -I -A "$(echo '$MONITOR' | sed -E "s/[[:space:]]+/ /gp")"'
+COMMAND='curl '$ENDPOINT' -I -A "$(echo '$MONITOR' | sed -E "s/[[:space:]]+/ /gp")"'
 
 (crontab -l ; echo "*/5 * * * * $COMMAND") | uniq - | crontab -
