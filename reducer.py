@@ -15,7 +15,7 @@ config_entity_date = "_source_date"
 config_log_name = "access.log"
 config_line_limit = 1000
 
-config_page_name = "home.html"
+config_page_name = "/usr/share/nginx/ssohh/home.html"
 config_page_template = "template.html"
 config_page_tag_title = "{{title}}"
 config_page_tag_notice = "{{notice}}"
@@ -93,4 +93,4 @@ for template_line in template_lines:
 
 with open(config_page_name, 'w') as page_file:
     for page_line in page_lines:
-        page_file.write(page_line + "\n")
+        page_file.write(page_line)
