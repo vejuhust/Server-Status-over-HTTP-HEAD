@@ -102,7 +102,7 @@ with open(config_page_template, 'r') as template_file:
 # Prepare page entity
 page_entity = {}
 page_entity[config_page_tag_title] = "SSoHH Summary Page"
-page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:d} of {:d} lines in {:s}".format(strftime("%Y-%m-%d %H:%M:%S %z %Z"), count_line_selected, count_line_total, config_log_path)
+page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:d} of {:d} lines from {:s}".format(strftime("%Y-%m-%d %H:%M:%S %z %Z"), count_line_selected, count_line_total, config_log_path)
 # Convert status entities into HTML table
 table_root = Element("table")
 table_header = SubElement(table_root, "tr")

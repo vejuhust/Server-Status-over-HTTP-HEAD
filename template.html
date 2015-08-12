@@ -8,22 +8,31 @@
     body {
       font: inherit;
       font-size: 100%;
-      font-family: "Helvetica Light", sans-serif;
+      font-family: Menlo, monospace, Consolas, Courier;
     }
     h1 {
-      font-size: 36px;
+      font-size: xx-large;
       font-weight: bold;
       text-align: center;
+    }
+    .notice {
+      font-style: italic;
+      margin-top: 30px;
+      margin-bottom: 20px;
+      margin-left: 20px;
+    }
+    .warning {
+      font-size: x-large;
+      text-align: center;
+    }
+    table {
+      font-size: small;
     }
   </style>
 </head>
 <body>
   <h1 class="title">{{title}}</h1>
-  <div class="notice">
-    {{notice}}
-  </div>
-  <div class="content">
-    {{content}}
-  </div>
+  <div class="notice">{{notice}}</div>
+  <div class="content">{{content}}</div>
 </body>
 </html>
