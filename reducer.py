@@ -10,12 +10,12 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 
 
 # Configuration
-config_tag = "abcwtf"
+config_tag = "YOUR_PRIVATE_TAG_FOR_SSOHH"
 config_entity_key = "name"
 config_entity_from = "_source_from"
 config_entity_date = "_source_date"
 
-config_log_path = "access.log"
+config_log_path = "/var/log/nginx/access.log"
 config_line_limit = 1000
 
 config_page_path = "/usr/share/nginx/ssohh/home.html"
