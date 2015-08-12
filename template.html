@@ -5,17 +5,25 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
   <meta http-equiv="refresh" content="60">
   <style type="text/css">
+    body {
+      font: inherit;
+      font-size: 100%;
+      font-family: "Helvetica Light", sans-serif;
+    }
+    h1 {
+      font-size: 36px;
+      font-weight: bold;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <div class="title">
-    {{title}}
-  </div>
+  <h1 class="title">{{title}}</h1>
   <div class="notice">
     {{notice}}
   </div>
   <div class="content">
-  {{content}}
+    {{content}}
   </div>
 </body>
 </html>
