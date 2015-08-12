@@ -59,3 +59,7 @@ target/
 # Sublime Text
 *.sublime-project
 *.sublime-workspace
+
+# This Project
+*.zip
+upload.sh
