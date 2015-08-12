@@ -5,17 +5,48 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
   <meta http-equiv="refresh" content="60">
   <style type="text/css">
+    body {
+      font: inherit;
+      font-size: 100%;
+      font-family: Menlo, monospace, Consolas, Courier;
+      margin: 0 20px;
+    }
+    h1 {
+      font-size: xx-large;
+      font-weight: lighter;
+      text-align: center;
+    }
+    .notice {
+      font-size: small;
+      font-style: italic;
+      margin-top: 30px;
+      margin-bottom: 15px;
+    }
+    .warning {
+      font-size: x-large;
+      text-align: center;
+    }
+    table {
+      font-size: small;
+      border: groove;
+      border-collapse: collapse;
+      white-space: nowrap;
+    }
+    th {
+      border-bottom: 1px solid grey;
+    }
+    td {
+      border: 1px dotted grey;
+      padding: 1px 3px;
+    }
+    td:first-child, td:nth-child(2), td:nth-child(3) {
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
-  <div class="title">
-    {{title}}
-  </div>
-  <div class="notice">
-    {{notice}}
-  </div>
-  <div class="content">
-  {{content}}
-  </div>
+  <h1 class="title">{{title}}</h1>
+  <div class="notice">{{notice}}</div>
+  <div class="content">{{content}}</div>
 </body>
 </html>
