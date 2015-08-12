@@ -5,7 +5,9 @@
 from collections import OrderedDict
 from heapq import merge
 from re import compile, findall
+from time import strftime
 from xml.etree.ElementTree import Element, SubElement, tostring
+
 
 # Configuration
 config_tag = "abcwtf"
@@ -13,10 +15,10 @@ config_entity_key = "name"
 config_entity_from = "_source_from"
 config_entity_date = "_source_date"
 
-config_log_name = "access.log"
+config_log_path = "access.log"
 config_line_limit = 1000
 
-config_page_name = "/usr/share/nginx/ssohh/home.html"
+config_page_path = "/usr/share/nginx/ssohh/home.html"
 config_page_template = "template.html"
 config_page_tag_title = "{{title}}"
 config_page_tag_notice = "{{notice}}"
@@ -29,13 +31,15 @@ config_page_tags = [
 
 
 # Load log file by line
-with open(config_log_name, 'r') as log_file:
+with open(config_log_path, 'r') as log_file:
     log_raw = log_file.readlines()
     log_lines = [line_raw.strip() for line_raw in log_raw if not line_raw.isspace()]
 
 
 # Only needs latest lines in reverse chronological order
+count_line_total = len(log_lines)
 log_lines = log_lines[-config_line_limit:][::-1]
+count_line_selected = len(log_lines)
 
 
 # Extract status entity from SSoHH log lines
@@ -97,8 +101,8 @@ with open(config_page_template, 'r') as template_file:
 
 # Prepare page entity
 page_entity = {}
-page_entity[config_page_tag_title] = "This is Title"
-page_entity[config_page_tag_notice] = "Last updated at: "
+page_entity[config_page_tag_title] = "SSoHH Summary Page"
+page_entity[config_page_tag_notice] = "Report generated at {:s} with last {:d} of {:d} lines in {:s}".format(strftime("%Y-%m-%d %H:%M:%S %z %Z"), count_line_selected, count_line_total, config_log_path)
 # Convert status entities into HTML table
 table_root = Element("table")
 table_header = SubElement(table_root, "tr")
@@ -128,6 +132,6 @@ for template_line in template_lines:
         page_line = page_line.replace(page_tag, page_entity[page_tag])
     page_lines.append(page_line)
 
-with open(config_page_name, 'w') as page_file:
+with open(config_page_path, 'w') as page_file:
     for page_line in page_lines:
         page_file.write(page_line)
