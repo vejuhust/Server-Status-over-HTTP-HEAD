@@ -23,7 +23,7 @@ mac)
     MONITOR='"[ssohh] '$SSOHH_TAG'; [name] $(hostname); [note] regular_5min_mac; [network] $(/sbin/ifconfig | grep en1 -A 1 | tail -1); [date] $(date); [uptime] $(uptime); [disk] $(df -h | grep / -m 1); [memory] $(top -l 1 | head -10 | grep PhysMem); "'
     ;;
 *)
-    echo "Invalid ARCH"
+    echo "Invalid ARCH: "$ARCH
     exit 1
     ;;
 esac
