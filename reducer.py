@@ -16,8 +16,15 @@ config_log_name = "access.log"
 config_line_limit = 1000
 
 config_page_name = "home.html"
-config_page_directory = ""
-
+config_page_template = "template.html"
+config_page_tag_title = "{{title}}"
+config_page_tag_notice = "{{notice}}"
+config_page_tag_content = "{{content}}"
+config_page_tags = [
+    config_page_tag_title,
+    config_page_tag_notice,
+    config_page_tag_content
+]
 
 # Load log file by line
 with open(config_log_name, 'r') as log_file:
@@ -63,5 +70,27 @@ for line in log_lines:
 status_entities = OrderedDict(sorted(status_entities.items(), key = lambda x:x[0].lower(), reverse = False))
 
 
-for entity_key in status_entities:
-    print(entity_key, status_entities[entity_key], "\n")
+# for entity_key in status_entities:
+#     print(entity_key, status_entities[entity_key], "\n")
+
+# Load page template
+with open(config_page_template, 'r') as template_file:
+    template_lines = template_file.readlines()
+
+# Prepare page entity
+page_entity = {}
+page_entity[config_page_tag_title] = "This is Title"
+page_entity[config_page_tag_notice] = "Last updated at: "
+page_entity[config_page_tag_content] = "<b>Hello World!</b>"
+
+# Render page with template & entity
+page_lines = []
+for template_line in template_lines:
+    page_line = template_line
+    for page_tag in config_page_tags:
+        page_line = page_line.replace(page_tag, page_entity[page_tag])
+    page_lines.append(page_line)
+
+with open(config_page_name, 'w') as page_file:
+    for page_line in page_lines:
+        page_file.write(page_line + "\n")
