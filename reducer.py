@@ -30,10 +30,20 @@ config_page_tags = [
 ]
 
 
+# Load file by lines
+def load_file_lines(path, allow_blank = True):
+    with open(path, 'r') as input_file:
+        lines_raw = input_file.readlines()
+        if allow_blank:
+            lines = lines_raw
+        else:
+            lines = [line.strip() for line in lines_raw if not line.isspace()]
+    return lines
+
+
+
 # Load log file by line
-with open(config_log_path, 'r') as log_file:
-    log_raw = log_file.readlines()
-    log_lines = [line_raw.strip() for line_raw in log_raw if not line_raw.isspace()]
+log_lines = load_file_lines(config_log_path, False)
 
 
 # Only needs latest lines in reverse chronological order
@@ -95,8 +105,7 @@ status_entities = OrderedDict(sorted(status_entities.items(), key = lambda x:x[0
 
 
 # Load page template
-with open(config_page_template, 'r') as template_file:
-    template_lines = template_file.readlines()
+template_lines = load_file_lines(config_page_template)
 
 
 # Prepare page entity
