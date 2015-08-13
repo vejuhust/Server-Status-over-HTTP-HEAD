@@ -145,20 +145,26 @@ def fill_page_entity_error(message):
 
 # Main function
 if __name__ == '__main__':
-    # Load latest log lines in reverse chronological order
-    log_lines = load_file_lines(config_log_path, False)
-    count_line_total = len(log_lines)
-    log_lines = log_lines[-config_line_limit:][::-1]
-    count_line_selected = len(log_lines)
-
-    # Get the status entities and section keys
-    status_entities, section_all_keys = extract_all_status_entities_and_keys(log_lines)
+    error_message = ""
+    try:
+        # Load latest log lines in reverse chronological order
+        log_lines = load_file_lines(config_log_path, False)
+        count_line_total = len(log_lines)
+        log_lines = log_lines[-config_line_limit:][::-1]
+        count_line_selected = len(log_lines)
+    except Exception as e:
+        error_message = "Failed to Load Log: {:s}".format(str(e))
+    else:
+        # Get the status entities and section keys
+        status_entities, section_all_keys = extract_all_status_entities_and_keys(log_lines)
+        if not status_entities:
+            error_message = "No Data Extracted!"
 
     # Prepare page entity
-    if status_entities:
-        page_entity = fill_page_entity_data(status_entities, section_all_keys, count_line_total, count_line_selected)
+    if error_message:
+        page_entity = fill_page_entity_error(error_message)
     else:
-        page_entity = fill_page_entity_error("No Data Extracted!")
+        page_entity = fill_page_entity_data(status_entities, section_all_keys, count_line_total, count_line_selected)
 
     # Load page template
     template_lines = load_file_lines(config_page_template)
