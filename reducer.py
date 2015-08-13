@@ -41,17 +41,6 @@ def load_file_lines(path, allow_blank = True):
     return lines
 
 
-
-# Load log file by line
-log_lines = load_file_lines(config_log_path, False)
-
-
-# Only needs latest lines in reverse chronological order
-count_line_total = len(log_lines)
-log_lines = log_lines[-config_line_limit:][::-1]
-count_line_selected = len(log_lines)
-
-
 # Extract status entity from SSoHH log lines
 log_identity = '[ssohh] {:s};'.format(config_tag)
 source_pattern = compile(r"^(.*?)\s.*?\[(.*?)\]")
@@ -90,56 +79,71 @@ def merge_sorted_and_unique_lists(list1, list2):
     return list_result
 
 
-# Keep only the latest status entity for each server
-status_entities = {}
-section_all_keys = []
-for line in log_lines:
-    status_entity, section_keys = extract_status_entity(line)
-    if status_entity and config_entity_key in status_entity:
-        entity_key = status_entity[config_entity_key]
-        if not entity_key in status_entities:
-            status_entities[entity_key] = status_entity
-            section_all_keys = merge_sorted_and_unique_lists(section_all_keys, section_keys)
+# Extract the latest status entity for each server
+def extract_all_status_entities_and_keys(log_lines):
+    status_entities = {}
+    section_all_keys = []
+    for line in log_lines:
+        status_entity, section_keys = extract_status_entity(line)
+        if status_entity and config_entity_key in status_entity:
+            entity_key = status_entity[config_entity_key]
+            if not entity_key in status_entities:
+                status_entities[entity_key] = status_entity
+                section_all_keys = merge_sorted_and_unique_lists(section_all_keys, section_keys)
+    status_entities = OrderedDict(sorted(status_entities.items(), key = lambda x:x[0].lower(), reverse = False))
+    return status_entities, section_all_keys
 
-status_entities = OrderedDict(sorted(status_entities.items(), key = lambda x:x[0].lower(), reverse = False))
 
+# Prepare page entity with valid data
+def fill_page_entity_data(status_entities, section_all_keys):
+    page_entity = {}
+    page_entity[config_page_tag_title] = "SSoHH Summary Page"
+    page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:d} of {:d} lines from {:s}".format(strftime("%Y-%m-%d %H:%M:%S %z %Z"), count_line_selected, count_line_total, config_log_path)
+    # Convert status entities into HTML table
+    table_root = Element("table")
+    table_header = SubElement(table_root, "tr")
+    # Table header
+    SubElement(table_header, "th").text = "no"
+    SubElement(table_header, "th").text = "time"
+    SubElement(table_header, "th").text = "from"
+    for section_key in section_all_keys:
+        SubElement(table_header, "th").text = section_key
+    section_all_keys = [config_entity_date, config_entity_from] + section_all_keys
+    # Table content
+    entity_index = 0
+    for entity_key, status_entity in status_entities.items():
+        table_row = SubElement(table_root, "tr")
+        entity_index += 1
+        SubElement(table_row, "td").text = str(entity_index)
+        for section_key in section_all_keys:
+            if section_key in status_entity:
+                SubElement(table_row, "td").text = status_entity[section_key]
+            else:
+                SubElement(table_row, "td").text = "-"
+    # Show no data message if no result
+    if not status_entities:
+        message_root = Element("div", { "class": "warning" })
+        message_root.text = "No Data Extracted!"
+        table_root = message_root
+    page_entity[config_page_tag_content] = tostring(table_root, encoding="unicode")
+    return page_entity
+
+
+
+# Load latest log lines in reverse chronological order
+log_lines = load_file_lines(config_log_path, False)
+count_line_total = len(log_lines)
+log_lines = log_lines[-config_line_limit:][::-1]
+count_line_selected = len(log_lines)
+
+# Get the status entities and section keys
+status_entities, section_all_keys = extract_all_status_entities_and_keys(log_lines)
 
 # Load page template
 template_lines = load_file_lines(config_page_template)
 
-
 # Prepare page entity
-page_entity = {}
-page_entity[config_page_tag_title] = "SSoHH Summary Page"
-page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:d} of {:d} lines from {:s}".format(strftime("%Y-%m-%d %H:%M:%S %z %Z"), count_line_selected, count_line_total, config_log_path)
-# Convert status entities into HTML table
-table_root = Element("table")
-table_header = SubElement(table_root, "tr")
-# Table header
-SubElement(table_header, "th").text = "no"
-SubElement(table_header, "th").text = "time"
-SubElement(table_header, "th").text = "from"
-for section_key in section_all_keys:
-    SubElement(table_header, "th").text = section_key
-section_all_keys = [config_entity_date, config_entity_from] + section_all_keys
-# Table content
-entity_index = 0
-for entity_key, status_entity in status_entities.items():
-    table_row = SubElement(table_root, "tr")
-    entity_index += 1
-    SubElement(table_row, "td").text = str(entity_index)
-    for section_key in section_all_keys:
-        if section_key in status_entity:
-            SubElement(table_row, "td").text = status_entity[section_key]
-        else:
-            SubElement(table_row, "td").text = "-"
-# Show no data message if no result
-if not status_entities:
-    message_root = Element("div", { "class": "warning" })
-    message_root.text = "No Data Extracted!"
-    table_root = message_root
-page_entity[config_page_tag_content] = tostring(table_root, encoding="unicode")
-
+page_entity = fill_page_entity_data(status_entities, section_all_keys)
 
 # Render page with template & entity
 page_lines = []
