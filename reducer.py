@@ -17,6 +17,7 @@ config_entity_date = "_source_date"
 
 config_log_path = "/var/log/nginx/access.log"
 config_line_limit = 1000
+config_time_format = "%Y-%m-%d %H:%M:%S %z %Z"
 
 config_page_path = "/usr/share/nginx/ssohh/home.html"
 config_page_template = "template.html"
@@ -102,10 +103,10 @@ def extract_all_status_entities_and_keys(log_lines):
 
 
 # Prepare page entity with valid data
-def fill_page_entity_data(status_entities, section_all_keys):
+def fill_page_entity_data(status_entities, section_all_keys, count_line_total, count_line_selected):
     page_entity = {}
     page_entity[config_page_tag_title] = "SSoHH Summary Page :-)"
-    page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:d} of {:d} lines from {:s}".format(strftime("%Y-%m-%d %H:%M:%S %z %Z"), count_line_selected, count_line_total, config_log_path)
+    page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:d} of {:d} lines from {:s}".format(strftime(config_time_format), count_line_selected, count_line_total, config_log_path)
     # Convert status entities into HTML table
     table_root = Element("table")
     table_header = SubElement(table_root, "tr")
@@ -127,38 +128,48 @@ def fill_page_entity_data(status_entities, section_all_keys):
                 SubElement(table_row, "td").text = status_entity[section_key]
             else:
                 SubElement(table_row, "td").text = "-"
-    # Show no data message if no result
-    if not status_entities:
-        message_root = Element("div", { "class": "warning" })
-        message_root.text = "No Data Extracted!"
-        table_root = message_root
     page_entity[config_page_tag_content] = tostring(table_root, encoding="unicode")
     return page_entity
 
 
+# Prepare page entity with error message
+def fill_page_entity_error(message):
+    page_entity = {}
+    page_entity[config_page_tag_title] = "SSoHH Error Page :-("
+    page_entity[config_page_tag_notice] = "Report generated at {:s} from {:s}".format(strftime(config_time_format), config_log_path)
+    message_root = Element("div", { "class": "warning" })
+    message_root.text = message
+    page_entity[config_page_tag_content] = tostring(message_root, encoding="unicode")
+    return page_entity
 
-# Load latest log lines in reverse chronological order
-log_lines = load_file_lines(config_log_path, False)
-count_line_total = len(log_lines)
-log_lines = log_lines[-config_line_limit:][::-1]
-count_line_selected = len(log_lines)
 
-# Get the status entities and section keys
-status_entities, section_all_keys = extract_all_status_entities_and_keys(log_lines)
+# Main function
+if __name__ == '__main__':
+    # Load latest log lines in reverse chronological order
+    log_lines = load_file_lines(config_log_path, False)
+    count_line_total = len(log_lines)
+    log_lines = log_lines[-config_line_limit:][::-1]
+    count_line_selected = len(log_lines)
 
-# Load page template
-template_lines = load_file_lines(config_page_template)
+    # Get the status entities and section keys
+    status_entities, section_all_keys = extract_all_status_entities_and_keys(log_lines)
 
-# Prepare page entity
-page_entity = fill_page_entity_data(status_entities, section_all_keys)
+    # Prepare page entity
+    if status_entities:
+        page_entity = fill_page_entity_data(status_entities, section_all_keys, count_line_total, count_line_selected)
+    else:
+        page_entity = fill_page_entity_error("No Data Extracted!")
 
-# Render page with template & entity
-page_lines = []
-for template_line in template_lines:
-    page_line = template_line
-    for page_tag in config_page_tags:
-        page_line = page_line.replace(page_tag, page_entity[page_tag])
-    page_lines.append(page_line)
+    # Load page template
+    template_lines = load_file_lines(config_page_template)
 
-# Save as text/HTML file
-save_file_lines(config_page_path, page_lines)
+    # Render page with template & entity
+    page_lines = []
+    for template_line in template_lines:
+        page_line = template_line
+        for page_tag in config_page_tags:
+            page_line = page_line.replace(page_tag, page_entity[page_tag])
+        page_lines.append(page_line)
+
+    # Save as text/HTML file
+    save_file_lines(config_page_path, page_lines)
