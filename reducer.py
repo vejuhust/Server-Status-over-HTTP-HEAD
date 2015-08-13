@@ -107,15 +107,18 @@ page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:
 table_root = Element("table")
 table_header = SubElement(table_root, "tr")
 # Table header
+SubElement(table_header, "th").text = "no"
 SubElement(table_header, "th").text = "time"
 SubElement(table_header, "th").text = "from"
 for section_key in section_all_keys:
     SubElement(table_header, "th").text = section_key
 section_all_keys = [config_entity_date, config_entity_from] + section_all_keys
 # Table content
-for entity_key in status_entities:
-    status_entity = status_entities[entity_key]
+entity_index = 0
+for entity_key, status_entity in status_entities.items():
     table_row = SubElement(table_root, "tr")
+    entity_index += 1
+    SubElement(table_row, "td").text = str(entity_index)
     for section_key in section_all_keys:
         if section_key in status_entity:
             SubElement(table_row, "td").text = status_entity[section_key]
