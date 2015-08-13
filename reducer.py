@@ -31,14 +31,21 @@ config_page_tags = [
 
 
 # Load file by lines
-def load_file_lines(path, allow_blank = True):
-    with open(path, 'r') as input_file:
+def load_file_lines(file_path, allow_blank = True):
+    with open(file_path, 'r') as input_file:
         lines_raw = input_file.readlines()
         if allow_blank:
             lines = lines_raw
         else:
             lines = [line.strip() for line in lines_raw if not line.isspace()]
     return lines
+
+
+# Save file lines
+def save_file_lines(file_path, lines):
+    with open(file_path, 'w') as output_file:
+        for line in lines:
+            output_file.write(line)
 
 
 # Extract status entity from SSoHH log lines
@@ -97,7 +104,7 @@ def extract_all_status_entities_and_keys(log_lines):
 # Prepare page entity with valid data
 def fill_page_entity_data(status_entities, section_all_keys):
     page_entity = {}
-    page_entity[config_page_tag_title] = "SSoHH Summary Page"
+    page_entity[config_page_tag_title] = "SSoHH Summary Page :-)"
     page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:d} of {:d} lines from {:s}".format(strftime("%Y-%m-%d %H:%M:%S %z %Z"), count_line_selected, count_line_total, config_log_path)
     # Convert status entities into HTML table
     table_root = Element("table")
@@ -153,6 +160,5 @@ for template_line in template_lines:
         page_line = page_line.replace(page_tag, page_entity[page_tag])
     page_lines.append(page_line)
 
-with open(config_page_path, 'w') as page_file:
-    for page_line in page_lines:
-        page_file.write(page_line)
+# Save as text/HTML file
+save_file_lines(config_page_path, page_lines)
