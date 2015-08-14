@@ -4,6 +4,7 @@
 # Using
 from collections import OrderedDict
 from heapq import merge
+from os.path import join, dirname, abspath
 from re import compile, findall
 from time import strftime
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -17,6 +18,7 @@ config_entity_date = "_source_date"
 
 config_log_path = "/var/log/nginx/access.log"
 config_line_limit = 1000
+config_time_format = "%Y-%m-%d %H:%M:%S %z %Z"
 
 config_page_path = "/usr/share/nginx/ssohh/home.html"
 config_page_template = "template.html"
@@ -30,16 +32,22 @@ config_page_tags = [
 ]
 
 
-# Load log file by line
-with open(config_log_path, 'r') as log_file:
-    log_raw = log_file.readlines()
-    log_lines = [line_raw.strip() for line_raw in log_raw if not line_raw.isspace()]
+# Load file by lines
+def load_file_lines(file_path, allow_blank = True):
+    with open(file_path, 'r') as input_file:
+        lines_raw = input_file.readlines()
+        if allow_blank:
+            lines = lines_raw
+        else:
+            lines = [line.strip() for line in lines_raw if not line.isspace()]
+    return lines
 
 
-# Only needs latest lines in reverse chronological order
-count_line_total = len(log_lines)
-log_lines = log_lines[-config_line_limit:][::-1]
-count_line_selected = len(log_lines)
+# Save file lines
+def save_file_lines(file_path, lines):
+    with open(file_path, 'w') as output_file:
+        for line in lines:
+            output_file.write(line)
 
 
 # Extract status entity from SSoHH log lines
@@ -80,63 +88,96 @@ def merge_sorted_and_unique_lists(list1, list2):
     return list_result
 
 
-# Keep only the latest status entity for each server
-status_entities = {}
-section_all_keys = []
-for line in log_lines:
-    status_entity, section_keys = extract_status_entity(line)
-    if status_entity and config_entity_key in status_entity:
-        entity_key = status_entity[config_entity_key]
-        if not entity_key in status_entities:
-            status_entities[entity_key] = status_entity
-            section_all_keys = merge_sorted_and_unique_lists(section_all_keys, section_keys)
-
-status_entities = OrderedDict(sorted(status_entities.items(), key = lambda x:x[0].lower(), reverse = False))
-
-
-# Load page template
-with open(config_page_template, 'r') as template_file:
-    template_lines = template_file.readlines()
+# Extract the latest status entity for each server
+def extract_all_status_entities_and_keys(log_lines):
+    status_entities = {}
+    section_all_keys = []
+    for line in log_lines:
+        status_entity, section_keys = extract_status_entity(line)
+        if status_entity and config_entity_key in status_entity:
+            entity_key = status_entity[config_entity_key]
+            if not entity_key in status_entities:
+                status_entities[entity_key] = status_entity
+                section_all_keys = merge_sorted_and_unique_lists(section_all_keys, section_keys)
+    status_entities = OrderedDict(sorted(status_entities.items(), key = lambda x:x[0].lower(), reverse = False))
+    return status_entities, section_all_keys
 
 
-# Prepare page entity
-page_entity = {}
-page_entity[config_page_tag_title] = "SSoHH Summary Page"
-page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:d} of {:d} lines from {:s}".format(strftime("%Y-%m-%d %H:%M:%S %z %Z"), count_line_selected, count_line_total, config_log_path)
-# Convert status entities into HTML table
-table_root = Element("table")
-table_header = SubElement(table_root, "tr")
-# Table header
-SubElement(table_header, "th").text = "time"
-SubElement(table_header, "th").text = "from"
-for section_key in section_all_keys:
-    SubElement(table_header, "th").text = section_key
-section_all_keys = [config_entity_date, config_entity_from] + section_all_keys
-# Table content
-for entity_key in status_entities:
-    status_entity = status_entities[entity_key]
-    table_row = SubElement(table_root, "tr")
+# Prepare page entity with valid data
+def fill_page_entity_data(status_entities, section_all_keys, count_line_total, count_line_selected):
+    page_entity = {}
+    page_entity[config_page_tag_title] = "SSoHH Summary Page :-)"
+    page_entity[config_page_tag_notice] = "Report generated at {:s} based on last {:d} of {:d} lines from {:s}".format(strftime(config_time_format), count_line_selected, count_line_total, config_log_path)
+    # Convert status entities into HTML table
+    table_root = Element("table")
+    table_header = SubElement(table_root, "tr")
+    # Table header
+    SubElement(table_header, "th").text = "no"
+    SubElement(table_header, "th").text = "time"
+    SubElement(table_header, "th").text = "from"
     for section_key in section_all_keys:
-        if section_key in status_entity:
-            SubElement(table_row, "td").text = status_entity[section_key]
-        else:
-            SubElement(table_row, "td").text = "-"
-# Show no data message if no result
-if not status_entities:
+        SubElement(table_header, "th").text = section_key
+    section_all_keys = [config_entity_date, config_entity_from] + section_all_keys
+    # Table content
+    entity_index = 0
+    for entity_key, status_entity in status_entities.items():
+        table_row = SubElement(table_root, "tr")
+        entity_index += 1
+        SubElement(table_row, "td").text = str(entity_index)
+        for section_key in section_all_keys:
+            if section_key in status_entity:
+                SubElement(table_row, "td").text = status_entity[section_key]
+            else:
+                SubElement(table_row, "td").text = "-"
+    page_entity[config_page_tag_content] = tostring(table_root, encoding="unicode")
+    return page_entity
+
+
+# Prepare page entity with error message
+def fill_page_entity_error(message):
+    page_entity = {}
+    page_entity[config_page_tag_title] = "SSoHH Error Page :-("
+    page_entity[config_page_tag_notice] = "Report generated at {:s} from {:s}".format(strftime(config_time_format), config_log_path)
     message_root = Element("div", { "class": "warning" })
-    message_root.text = "No Data Extracted!"
-    table_root = message_root
-page_entity[config_page_tag_content] = tostring(table_root, encoding="unicode")
+    message_root.text = message
+    page_entity[config_page_tag_content] = tostring(message_root, encoding="unicode")
+    return page_entity
 
 
-# Render page with template & entity
-page_lines = []
-for template_line in template_lines:
-    page_line = template_line
-    for page_tag in config_page_tags:
-        page_line = page_line.replace(page_tag, page_entity[page_tag])
-    page_lines.append(page_line)
+# Main function
+if __name__ == '__main__':
+    error_message = ""
+    try:
+        # Load latest log lines in reverse chronological order
+        log_lines = load_file_lines(config_log_path, False)
+        count_line_total = len(log_lines)
+        log_lines = log_lines[-config_line_limit:][::-1]
+        count_line_selected = len(log_lines)
+    except Exception as e:
+        error_message = "Failed to Load Log: {:s}".format(str(e))
+    else:
+        # Get the status entities and section keys
+        status_entities, section_all_keys = extract_all_status_entities_and_keys(log_lines)
+        if not status_entities:
+            error_message = "No Data Extracted!"
 
-with open(config_page_path, 'w') as page_file:
-    for page_line in page_lines:
-        page_file.write(page_line)
+    # Prepare page entity
+    if error_message:
+        page_entity = fill_page_entity_error(error_message)
+    else:
+        page_entity = fill_page_entity_data(status_entities, section_all_keys, count_line_total, count_line_selected)
+
+    # Load page template
+    template_path = join(dirname(abspath(__file__)), config_page_template)
+    template_lines = load_file_lines(template_path)
+
+    # Render page with template & entity
+    page_lines = []
+    for template_line in template_lines:
+        page_line = template_line
+        for page_tag in config_page_tags:
+            page_line = page_line.replace(page_tag, page_entity[page_tag])
+        page_lines.append(page_line)
+
+    # Save as text/HTML file
+    save_file_lines(config_page_path, page_lines)
