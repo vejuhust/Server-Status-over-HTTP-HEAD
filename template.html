@@ -6,28 +6,37 @@
   <meta http-equiv="refresh" content="60">
   <style type="text/css">
     body {
-      font: inherit;
-      font-size: 100%;
-      font-family: Menlo, monospace, Consolas, Courier;
       margin: 0 20px;
+      font: inherit;
+      font-size: small;
+      font-family: Menlo, monospace, Consolas, Courier;
+      text-align: center;
     }
     h1 {
       font-size: xx-large;
       font-weight: lighter;
-      text-align: center;
+    }
+    footer {
+      margin-top: 25px;
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+    footer a {
+      text-decoration: none;
+      color: #00c0ef;
     }
     .notice {
-      font-size: small;
       font-style: italic;
       margin-top: 30px;
-      margin-bottom: 15px;
+      text-align: left;
+    }
+    .content {
+      margin-top: 15px;
+      text-align: left;
     }
     .warning {
       font-size: x-large;
-      text-align: center;
     }
     table {
-      font-size: small;
       border: groove;
       border-collapse: collapse;
       white-space: nowrap;
@@ -41,7 +50,6 @@
     }
     th:first-child, td:first-child {
       color: grey;
-      text-align: center;
     }
     td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) {
       white-space: nowrap;
@@ -52,5 +60,6 @@
   <h1 class="title">{{title}}</h1>
   <div class="notice">{{notice}}</div>
   <div class="content">{{content}}</div>
+  <footer>Proudly Powered by <a href="https://github.com/vejuhust/Server-Status-over-HTTP-HEAD" target="_blank">❤SSoHH</a></footer>
 </body>
 </html>
