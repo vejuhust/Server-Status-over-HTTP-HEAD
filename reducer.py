@@ -4,6 +4,7 @@
 # Using
 from collections import OrderedDict
 from heapq import merge
+from os.path import join, dirname, abspath
 from re import compile, findall
 from time import strftime
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -167,7 +168,8 @@ if __name__ == '__main__':
         page_entity = fill_page_entity_data(status_entities, section_all_keys, count_line_total, count_line_selected)
 
     # Load page template
-    template_lines = load_file_lines(config_page_template)
+    template_path = join(dirname(abspath(__file__)), config_page_template)
+    template_lines = load_file_lines(template_path)
 
     # Render page with template & entity
     page_lines = []
