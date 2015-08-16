@@ -38,7 +38,7 @@ Copy configured *client_set.sh* to each *nix machine to be monitored, `chmod +x 
 * `./client_set.sh linux` for Ubuntu Linux
 * `./client_set.sh mac` for OS X on Macintosh
 
-You may add/edit `MONITOR` in *client_set.sh* to customize the metrics.
+You may add/edit `MONITOR` in *client_set.sh* to customize the metrics. Sections in `MONITOR` should match the regular expression `\[(?P<key>.*?)\](?P<value>.*?);`. And this regular expression can also be customized by changing `section_pattern` in *reducer.py*.
 
 ### Server-Side
 
