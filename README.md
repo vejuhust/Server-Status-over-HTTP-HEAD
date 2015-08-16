@@ -53,6 +53,8 @@ Start the web server to host the generated page, and open your browser to visit 
 
 ## Preview
 
+![demo site screenshot](https://cloud.githubusercontent.com/assets/2491781/9291883/e4120cd0-440b-11e5-9cdf-a51a690c0d0e.png)
+
 
 ## Suggestion
 1. Keep `SSOHH_TAG` confidential if you don't want to see any faked lines
