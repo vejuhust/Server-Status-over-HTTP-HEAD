@@ -64,4 +64,5 @@ Start the web server to host the generated page, and open your browser to visit 
 ## Known Issues
 
 1. Not supported on Microsoft Windows Server
-2. Log rotation may cause missing lines, especially for machines that have been disconnected for a while
+2. Log rotation may cause missing lines on the page, especially for machines that have been disconnected for a while
+3. `hostname` is the only identification for each machine, duplicate or modification will cause missing/additional lines on the page
